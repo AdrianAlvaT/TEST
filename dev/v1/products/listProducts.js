@@ -1,12 +1,13 @@
-const pool = require("../../../config/db");
+const prisma = require('../../../prismaClient');
+
 
 const listProducts = async (req, res) => {
     try {
-        const result = await pool.query("SELECT * FROM products");
-        res.json(result.rows);
+      const productos = await prisma.tb_producto.findMany();
+      res.json(productos);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error.message });
     }
-};
+  };
 
 module.exports = listProducts;
