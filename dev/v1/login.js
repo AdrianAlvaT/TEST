@@ -1,8 +1,8 @@
-const prisma = require('../../../prismaClient');
+const prisma = require('../../prismaClient');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-const SECRET = 'secret'; // Reemplázalo con process.env.SECRET en producción
+const TOKEN = 'token'; // Reemplázalo con process.env.SECRET en producción
 
 const loginUsuario = async (req, res) => {
   const { usuario, password } = req.body;
@@ -26,7 +26,7 @@ const loginUsuario = async (req, res) => {
     //generar el token con id y rol
     const token = jwt.sign(
       { id: user.id_usuario, rol: user.rol },
-      SECRET,
+      TOKEN,
       { expiresIn: '1h' }
     );
 

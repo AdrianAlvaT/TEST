@@ -16,11 +16,11 @@ const authMiddleware = (rolesPermitidos = []) => {
     try {
       const payload = jwt.verify(token, SECRET);
 
-      // Verifica si el rol está en la lista de roles permitidos
-      /*if (!rolesPermitidos.includes(payload.rol)) {
+
+      if (rolesPermitidos.length && !rolesPermitidos.includes(payload.rol)) {
         return res.status(403).json({ error: 'Acceso denegado: rol no autorizado' });
-      }*/
-      console.log(payload);
+      }
+
       req.user = payload; // Guarda el usuario en el request
       next(); // Pasa al siguiente middleware/controlador
     } catch (err) {

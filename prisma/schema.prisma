@@ -8,7 +8,7 @@ datasource db {
 }
 
 model tb_persona {
-  id_persona       Int          @id
+  id_persona       Int          @id @default(autoincrement())
   nombre           String?      @db.VarChar(50)
   apellido_paterno String?      @db.VarChar(50)
   apellido_materno String?      @db.VarChar(50)
@@ -23,13 +23,16 @@ model tb_usuario {
   rol         String   @default("cliente")
   usuario    String?   @unique  @db.VarChar(30)
   password   String?     @db.VarChar(100)
+  status     Boolean?    @default(true)
   persona    tb_persona? @relation(fields: [id_persona], references: [id_persona], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model tb_producto {
-  id_producto     Int     @id @default(autoincrement())
+  id_producto     Int     @unique @id @default(autoincrement())
   nombre_producto String? @db.VarChar(30)
   sku_producto    String? @db.VarChar(10)
   precio_producto Int?
   stock           Int?
+  status          Boolean?  @default(true)
+  fecha_ingreso   DateTime? @default(now())
 }
