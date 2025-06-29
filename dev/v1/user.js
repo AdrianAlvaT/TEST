@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const bcrypt = require('bcrypt');
 const verificarToken = require('../../middlewares/auth');
 
 router.get('/', async (req, res) => {
@@ -34,11 +35,13 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', verificarToken(['admin']), async (req, res) => {
-  const { id_persona, usuario, password, rol } = req.body;
+router.post('/register', verificarToken(['admin']), async (req, res) => {
+  const { nombre, apellido_paterno, apellido_materno, edad, sexo, usuario, password, rol } = req.body;
 
-  if (!id_persona || !usuario || !password) {
-    return res.status(400).json({ error: 'Faltan campos obligatorios (id_persona, usuario, password)' });
+  if(!nombre || !apellido_paterno || !usuario || !password){
+    return res.status(400).json({
+      error: 'Faltan campos obligatorios: nombre, apellido_paterno, usuario y password',
+    });
   }
 
 
@@ -48,21 +51,32 @@ router.post('/', verificarToken(['admin']), async (req, res) => {
       return res.status(403).json({ error: 'Acceso denegado: se requiere rol de administrador' });
     }
 
+    const persona = await prisma.tb_persona.create({
+      data: {
+        nombre,
+        apellido_paterno,
+        apellido_materno,
+        edad: edad ? parseInt(edad) : null,
+        sexo: sexo !== undefined ? Boolean(sexo) : null,
+      },
+    });
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const nuevoUsuario = await prisma.tb_usuario.create({
       data: {
-        id_persona,
+        id_persona: persona.id_persona,
         usuario,
         password: hashedPassword,
         rol: rol || 'cliente',
         status: true,
       },
     });
-    res.status(201).json({ message: 'Usuario creado exitosamente', usuario: nuevoUsuario });
+
+    return res.status(201).json({ message: 'Persona y usuario registrados exitosamente', persona, usuario: nuevoUsuario });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Error al crear usuario' });
+    res.status(500).json({ error: 'Error al persona y usuario' });
   }
 });
 

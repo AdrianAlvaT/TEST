@@ -2,7 +2,7 @@ const prisma = require('../../prismaClient');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-const TOKEN = 'token'; // Reemplázalo con process.env.SECRET en producción
+const SECRET = 'secret'; // Reemplázalo con process.env.SECRET en producción
 
 const loginUsuario = async (req, res) => {
   const { usuario, password } = req.body;
@@ -22,11 +22,10 @@ const loginUsuario = async (req, res) => {
     if (!valid) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
-
     //generar el token con id y rol
     const token = jwt.sign(
       { id: user.id_usuario, rol: user.rol },
-      TOKEN,
+      SECRET,
       { expiresIn: '1h' }
     );
 
@@ -36,7 +35,6 @@ const loginUsuario = async (req, res) => {
       usuario: user.usuario,
       rol: user.rol,
     });
-
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

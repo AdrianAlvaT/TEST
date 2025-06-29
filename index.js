@@ -3,11 +3,13 @@ const app = express();
 const auth = require('./middlewares/auth');
 const productRoutes = require('./dev/v1/products');
 const userRoutes = require('./dev/v1/user');
+const shopRoutes = require('./dev/v1/shop');
 const loginUsuario = require("./dev/v1/login");
 
 app.use(express.json());
 app.use('/products', productRoutes);
 app.use('/users', userRoutes);
+app.use('/shop', shopRoutes);
 app.post('/api/v1/login', loginUsuario);
 
 app.get('/', (req, res) => {
