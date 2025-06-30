@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { v4: uuidv4 } = require('uuid');
+const verificarToken = require('../../middlewares/auth');
 
 router.get('/',async (req, res) => {
   try {
@@ -28,12 +30,24 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/addproducts', verificarToken(['admin']), async (req, res) => {
 
   const { nombre_producto, sku_producto, precio_producto, stock } = req.body;
+  
+  if(!nombre_producto || !sku_producto || !precio_producto || !stock){
+    return res.status(400).json({
+      error: 'Faltan campos obligatorios: nombre_producto, sku_producto, precio_producto y stock',
+    });
+  }
+  
   try {
+    if (req.user.rol !== 'admin') {
+      return res.status(403).json({ error: 'Acceso denegado: se requiere rol de administrador' });
+    }
+
     const nuevoProducto = await prisma.tb_producto.create({
       data: {
+        id_producto: uuidv4(),
         nombre_producto,
         sku_producto,
         precio_producto,
@@ -41,13 +55,15 @@ router.post('/', async (req, res) => {
         status: true,
       },
     });
-    res.status(201).json(nuevoProducto);
+    console.log(nuevoProducto);
+    return res.status(201).json({message: 'Producto creado exitosamente', nuevoProducto});
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: 'Error al crear el producto' });
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', verificarToken(['admin']), async (req, res) => {
   const id = parseInt(req.params.id);
   const { nombre_producto, sku_producto, precio_producto, stock, status } = req.body;
   try {
@@ -61,7 +77,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', verificarToken(['admin']), async (req, res) => {
   const id = parseInt(req.params.id);
   try {
     const productoDesactivado = await prisma.tb_producto.update({

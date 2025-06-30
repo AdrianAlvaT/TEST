@@ -8,18 +8,20 @@ datasource db {
 }
 
 model tb_persona {
-  id_persona       Int          @id @default(autoincrement())
+  id_persona       String          @id 
   nombre           String?      @db.VarChar(50)
   apellido_paterno String?      @db.VarChar(50)
   apellido_materno String?      @db.VarChar(50)
   edad             Int?
   sexo             Boolean?
   usuario          tb_usuario[]
+
+  ordenes          tb_ordenes[]
 }
 
 model tb_usuario {
-  id_usuario Int         @id @default(autoincrement())
-  id_persona Int?
+  id_usuario String         @id 
+  id_persona String
   rol         String   @default("cliente")
   usuario    String?   @unique  @db.VarChar(30)
   password   String?     @db.VarChar(100)
@@ -28,11 +30,35 @@ model tb_usuario {
 }
 
 model tb_producto {
-  id_producto     Int     @unique @id @default(autoincrement())
+  id_producto     String     @unique @id 
   nombre_producto String? @db.VarChar(30)
   sku_producto    String? @db.VarChar(10)
   precio_producto Int?
   stock           Int?
   status          Boolean?  @default(true)
   fecha_ingreso   DateTime? @default(now())
+
+  detalles        tb_detalle_ordenes[]
+}
+
+model tb_ordenes {
+  id_orden    Int                 @id 
+  id_persona  String
+  fecha       DateTime            @default(now())
+  total       Float
+  status      String              @default("pendiente")
+  
+  persona     tb_persona          @relation(fields: [id_persona], references: [id_persona])
+  detalles    tb_detalle_ordenes[]
+}
+
+model tb_detalle_ordenes {
+  id_detalle    Int        @id 
+  id_orden      Int
+  id_producto   String
+  cantidad      Int
+  precio_unit   Float
+  
+  orden         tb_ordenes  @relation(fields: [id_orden], references: [id_orden])
+  producto      tb_producto @relation(fields: [id_producto], references: [id_producto])
 }

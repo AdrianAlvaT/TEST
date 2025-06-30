@@ -3,6 +3,7 @@ const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const bcrypt = require('bcrypt');
+const { v4: uuidv4 } = require('uuid');
 const verificarToken = require('../../middlewares/auth');
 
 router.get('/', async (req, res) => {
@@ -53,6 +54,7 @@ router.post('/register', verificarToken(['admin']), async (req, res) => {
 
     const persona = await prisma.tb_persona.create({
       data: {
+        id_persona: uuidv4(),
         nombre,
         apellido_paterno,
         apellido_materno,
@@ -65,6 +67,7 @@ router.post('/register', verificarToken(['admin']), async (req, res) => {
 
     const nuevoUsuario = await prisma.tb_usuario.create({
       data: {
+        id_usuario: uuidv4(),
         id_persona: persona.id_persona,
         usuario,
         password: hashedPassword,

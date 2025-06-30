@@ -5,12 +5,15 @@ const productRoutes = require('./dev/v1/products');
 const userRoutes = require('./dev/v1/user');
 const shopRoutes = require('./dev/v1/shop');
 const loginUsuario = require("./dev/v1/login");
+const ordenesRoutes = require('./dev/v1/ordenes')
 
 app.use(express.json());
 app.use('/products', productRoutes);
 app.use('/users', userRoutes);
 app.use('/shop', shopRoutes);
+app.use('/ordenes', ordenesRoutes);
 app.post('/api/v1/login', loginUsuario);
+
 
 app.get('/', (req, res) => {
     res.send('API funcionando correctamente');
