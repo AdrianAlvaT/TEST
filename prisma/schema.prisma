@@ -26,7 +26,9 @@ model tb_usuario {
   usuario    String?   @unique  @db.VarChar(30)
   password   String?     @db.VarChar(100)
   status     Boolean?    @default(true)
+
   persona    tb_persona? @relation(fields: [id_persona], references: [id_persona], onDelete: NoAction, onUpdate: NoAction)
+
 }
 
 model tb_producto {
@@ -42,23 +44,22 @@ model tb_producto {
 }
 
 model tb_ordenes {
-  id_orden    Int                 @id 
+  id_orden    String                 @id 
   id_persona  String
   fecha       DateTime            @default(now())
   total       Float
   status      String              @default("pendiente")
-  
   persona     tb_persona          @relation(fields: [id_persona], references: [id_persona])
   detalles    tb_detalle_ordenes[]
 }
 
 model tb_detalle_ordenes {
-  id_detalle    Int        @id 
-  id_orden      Int
+  id_detalle    String        @id 
+  id_orden      String
   id_producto   String
   cantidad      Int
   precio_unit   Float
-  
+
   orden         tb_ordenes  @relation(fields: [id_orden], references: [id_orden])
   producto      tb_producto @relation(fields: [id_producto], references: [id_producto])
 }

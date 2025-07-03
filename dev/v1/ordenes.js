@@ -4,7 +4,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 router.get('/:id_usuario', async (req, res) => {
-    const id_usuario = parseInt(req.params.id_usuario);
+    const id_usuario = req.params.id_usuario;
   
     try {
       // Validar que usuario exista
