@@ -24,32 +24,37 @@ router.get('/',async (req: Request, res: Response) => {
   }
 });
 
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   const id = req.params.id;
   try {
     const product = await prisma.tb_producto.findUnique({
       where: { id_producto: id },
     });
-   if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
+   if (!product) {
+     res.status(404).json({ error: 'Producto no encontrado' });
+     return;
+   }
     res.json(product);
   } catch (error) {
     res.status(500).json({ error: 'Error al obtener el producto' });
   }
 });
 
-router.post('/addproducts', verificarToken(['admin']), async (req: RequestWithUser, res: Response) => {
+router.post('/addproducts', verificarToken(['admin']), async (req: Request, res: Response): Promise<void> => {
 
   const { nombre_producto, sku_producto, precio_producto, stock } = req.body;
   
   if(!nombre_producto || !sku_producto || !precio_producto || !stock){
-    return res.status(400).json({
+    res.status(400).json({
       error: 'Faltan campos obligatorios: nombre_producto, sku_producto, precio_producto y stock',
     });
+    return;
   }
   
   try {
-    if (req.user.rol !== 'admin') {
-      return res.status(403).json({ error: 'Acceso denegado: se requiere rol de administrador' });
+    if (req.user?.rol !== 'admin') {
+      res.status(403).json({ error: 'Acceso denegado: se requiere rol de administrador' });
+      return;
     }
 
     const nuevoProducto = await prisma.tb_producto.create({
@@ -63,12 +68,13 @@ router.post('/addproducts', verificarToken(['admin']), async (req: RequestWithUs
       },
     });
     console.log(nuevoProducto);
-    return res.status(201).json({message: 'Producto creado exitosamente', nuevoProducto});
+    res.status(201).json({message: 'Producto creado exitosamente', nuevoProducto});
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: 'Error al crear el producto' });
   }
 });
+
 
 router.put('/:id', verificarToken(['admin']), async (req: Request, res: Response) => {
   const id = req.params.id;
