@@ -1,9 +1,9 @@
-const express = require('express');
+import express, { Request, Response } from 'express';
+import { PrismaClient } from '@prisma/client';
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-router.get('/:id_usuario', async (req, res) => {
+router.get('/:id_usuario', async (req: Request, res: Response) => {
     const id_usuario = req.params.id_usuario;
   
     try {
@@ -50,4 +50,5 @@ router.get('/:id_usuario', async (req, res) => {
       res.status(500).json({ error: 'Error al obtener las órdenes del usuario' });
     }
   });
-  module.exports = router;
+  
+export default router;

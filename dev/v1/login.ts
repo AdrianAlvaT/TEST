@@ -1,10 +1,11 @@
-const prisma = require('../../prismaClient');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+import prisma from '../../prismaClient';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { Request, Response } from 'express';
 
 const SECRET = 'secret'; // Reemplázalo con process.env.SECRET en producción
 
-const loginUsuario = async (req, res) => {
+const loginUsuario = async (req: Request, res: Response) => {
   const { usuario, password } = req.body;
 
   try {
@@ -17,7 +18,7 @@ const loginUsuario = async (req, res) => {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
-    const valid = await bcrypt.compare(password, user.password);
+    const valid = await bcrypt.compare(password, user.password!);
     console.log(valid);
     if (!valid) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
@@ -35,9 +36,14 @@ const loginUsuario = async (req, res) => {
       usuario: user.usuario,
       rol: user.rol,
     });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Error desconocido' });
+    }
   }
 };
 
-module.exports = loginUsuario;
+export default loginUsuario;
+export {};

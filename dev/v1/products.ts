@@ -1,11 +1,18 @@
-const express = require('express');
-const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-const { v4: uuidv4 } = require('uuid');
-const verificarToken = require('../../middlewares/auth');
+import express, { Request, Response } from 'express';
+import prisma from '../../prismaClient';
+import { v4 as uuidv4 } from 'uuid';
+import verificarToken from '../../middlewares/auth';  
 
-router.get('/',async (req, res) => {
+const router = express.Router();
+
+interface RequestWithUser extends Request {
+  user: {
+    id: string;
+    rol: string;
+  };
+}
+
+router.get('/',async (req: Request, res: Response) => {
   try {
     const products = await prisma.tb_producto.findMany({
       where: { status: true },
@@ -17,20 +24,20 @@ router.get('/',async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
-  const id = parseInt(req.params.id);
+router.get('/:id', async (req: Request, res: Response) => {
+  const id = req.params.id;
   try {
     const product = await prisma.tb_producto.findUnique({
-      where: { id },
+      where: { id_producto: id },
     });
-    if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
+   if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
     res.json(product);
   } catch (error) {
     res.status(500).json({ error: 'Error al obtener el producto' });
   }
 });
 
-router.post('/addproducts', verificarToken(['admin']), async (req, res) => {
+router.post('/addproducts', verificarToken(['admin']), async (req: RequestWithUser, res: Response) => {
 
   const { nombre_producto, sku_producto, precio_producto, stock } = req.body;
   
@@ -63,8 +70,8 @@ router.post('/addproducts', verificarToken(['admin']), async (req, res) => {
   }
 });
 
-router.put('/:id', verificarToken(['admin']), async (req, res) => {
-  const id = parseInt(req.params.id);
+router.put('/:id', verificarToken(['admin']), async (req: Request, res: Response) => {
+  const id = req.params.id;
   const { nombre_producto, sku_producto, precio_producto, stock, status } = req.body;
   try {
     const productoActualizado = await prisma.tb_producto.update({
@@ -77,8 +84,8 @@ router.put('/:id', verificarToken(['admin']), async (req, res) => {
   }
 });
 
-router.delete('/:id', verificarToken(['admin']), async (req, res) => {
-  const id = parseInt(req.params.id);
+router.delete('/:id', verificarToken(['admin']), async (req: Request, res: Response) => {
+  const id = req.params.id;
   try {
     const productoDesactivado = await prisma.tb_producto.update({
       where: { id_producto: id },
@@ -93,4 +100,4 @@ router.delete('/:id', verificarToken(['admin']), async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
