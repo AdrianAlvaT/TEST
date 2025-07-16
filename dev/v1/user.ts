@@ -1,12 +1,11 @@
-const express = require('express');
+import express, { Request, Response } from 'express';
+import prisma from '../../prismaClient';
+import bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
+import verificarToken from '../../middlewares/auth';
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-const bcrypt = require('bcrypt');
-const { v4: uuidv4 } = require('uuid');
-const verificarToken = require('../../middlewares/auth');
 
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const usuarios = await prisma.tb_usuario.findMany({
       where: { status: true },
@@ -18,8 +17,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
-  const id = parseInt(req.params.id);
+router.get('/:id', async (req: Request, res: Response): Promise<void> => {
+  const id = req.params.id;
   try {
     const usuario = await prisma.tb_usuario.findUnique({
       where: { id_usuario: id },
@@ -27,7 +26,8 @@ router.get('/:id', async (req, res) => {
     });
 
     if (!usuario) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
+      res.status(404).json({ error: 'Usuario no encontrado' });
+      return;
     }
 
     res.json(usuario);
@@ -36,20 +36,20 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/register', verificarToken(['admin']), async (req, res) => {
+router.post('/register', verificarToken(['admin']), async (req: Request, res: Response): Promise<void> => {
   const { nombre, apellido_paterno, apellido_materno, edad, sexo, usuario, password, rol } = req.body;
 
   if(!nombre || !apellido_paterno || !usuario || !password){
-    return res.status(400).json({
+    res.status(400).json({
       error: 'Faltan campos obligatorios: nombre, apellido_paterno, usuario y password',
     });
+    return;
   }
 
-
   try {
-
-    if (req.user.rol !== 'admin') {
-      return res.status(403).json({ error: 'Acceso denegado: se requiere rol de administrador' });
+    if (req.user?.rol !== 'admin') {
+      res.status(403).json({ error: 'Acceso denegado: se requiere rol de administrador' });
+      return;
     }
 
     const persona = await prisma.tb_persona.create({
@@ -76,15 +76,15 @@ router.post('/register', verificarToken(['admin']), async (req, res) => {
       },
     });
 
-    return res.status(201).json({ message: 'Persona y usuario registrados exitosamente', persona, usuario: nuevoUsuario });
+    res.status(201).json({ message: 'Persona y usuario registrados exitosamente', persona, usuario: nuevoUsuario });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error al persona y usuario' });
   }
 });
 
-router.put('/:id', async (req, res) => {
-  const id = parseInt(req.params.id);
+router.put('/:id', async (req: Request, res: Response): Promise<void> => {
+  const id = req.params.id;
   const { id_persona, usuario, password, rol, status } = req.body;
 
   try {
@@ -104,8 +104,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
-  const id = parseInt(req.params.id);
+router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
+  const id = req.params.id;
   try {
     const usuarioDesactivado = await prisma.tb_usuario.update({
       where: { id_usuario: id },

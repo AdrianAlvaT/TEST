@@ -1,18 +1,11 @@
 import express, { Request, Response } from 'express';
 import prisma from '../../prismaClient';
 import { v4 as uuidv4 } from 'uuid';
-import verificarToken from '../../middlewares/auth';  
+import verificarToken from '../../middlewares/auth';
 
 const router = express.Router();
 
-interface RequestWithUser extends Request {
-  user: {
-    id: string;
-    rol: string;
-  };
-}
-
-router.get('/',async (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const products = await prisma.tb_producto.findMany({
       where: { status: true },
@@ -75,8 +68,7 @@ router.post('/addproducts', verificarToken(['admin']), async (req: Request, res:
   }
 });
 
-
-router.put('/:id', verificarToken(['admin']), async (req: Request, res: Response) => {
+router.put('/:id', verificarToken(['admin']), async (req: Request, res: Response): Promise<void> => {
   const id = req.params.id;
   const { nombre_producto, sku_producto, precio_producto, stock, status } = req.body;
   try {
@@ -90,7 +82,7 @@ router.put('/:id', verificarToken(['admin']), async (req: Request, res: Response
   }
 });
 
-router.delete('/:id', verificarToken(['admin']), async (req: Request, res: Response) => {
+router.delete('/:id', verificarToken(['admin']), async (req: Request, res: Response): Promise<void> => {
   const id = req.params.id;
   try {
     const productoDesactivado = await prisma.tb_producto.update({

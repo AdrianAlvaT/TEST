@@ -5,7 +5,7 @@ import { Request, Response } from 'express';
 
 const SECRET = 'secret'; // Reemplázalo con process.env.SECRET en producción
 
-const loginUsuario = async (req: Request, res: Response) => {
+const loginUsuario = async (req: Request, res: Response): Promise<void> => {
   const { usuario, password } = req.body;
 
   try {
@@ -15,13 +15,15 @@ const loginUsuario = async (req: Request, res: Response) => {
     console.log(user);
 
     if (!user) {
-      return res.status(401).json({ error: 'Credenciales inválidas' });
+      res.status(401).json({ error: 'Credenciales inválidas' });
+      return;
     }
 
     const valid = await bcrypt.compare(password, user.password!);
     console.log(valid);
     if (!valid) {
-      return res.status(401).json({ error: 'Credenciales inválidas' });
+      res.status(401).json({ error: 'Credenciales inválidas' });
+      return;
     }
     //generar el token con id y rol
     const token = jwt.sign(
@@ -46,4 +48,3 @@ const loginUsuario = async (req: Request, res: Response) => {
 };
 
 export default loginUsuario;
-export {};

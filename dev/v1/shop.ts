@@ -1,13 +1,13 @@
-const express = require('express');
+import express, { Request, Response } from 'express';
+import prisma from '../../prismaClient';
+import { v4 as uuidv4 } from 'uuid';
+import verificarToken from '../../middlewares/auth';
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-const verificarToken = require('../../middlewares/auth');
 
 /*
  Endpoint para que el cliente vea todos los productos disponibles
  */
-router.get('/products', verificarToken(), async (req, res) => {
+router.get('/products', verificarToken(), async (req: Request, res: Response): Promise<void> => {
   try {
     const products = await prisma.tb_producto.findMany({
       where: { status: true },
@@ -22,16 +22,16 @@ router.get('/products', verificarToken(), async (req, res) => {
 /**
  * Endpoint para registrar una compra
  */
-router.post('/comprar', verificarToken(), async (req, res) => {
-  const id_usuario = req.user.id;
+router.post('/comprar', verificarToken(), async (req: Request, res: Response): Promise<void> => {
+  const id_usuario = req.user?.id;
   const { productos } = req.body;
 
   if (!productos || !Array.isArray(productos) || productos.length === 0) {
-    return res.status(400).json({ error: 'Debe enviar productos a comprar' });
+    res.status(400).json({ error: 'Debe enviar productos a comprar' });
+    return;
   }
 
   try {
-
     // 1) Obtener usuario con su persona
     const usuario = await prisma.tb_usuario.findUnique({
       where: { id_usuario },
@@ -39,7 +39,8 @@ router.post('/comprar', verificarToken(), async (req, res) => {
     });
 
     if (!usuario || !usuario.persona) {
-      return res.status(404).json({ error: 'Usuario o persona no encontrada' });
+      res.status(404).json({ error: 'Usuario o persona no encontrada' });
+      return;
     }
 
     const id_persona = usuario.persona.id_persona;
@@ -54,17 +55,25 @@ router.post('/comprar', verificarToken(), async (req, res) => {
       });
 
       if (!prod || !prod.status) {
-        return res.status(404).json({ error: `Producto con id ${item.id_producto} no encontrado o no disponible` });
+        res.status(404).json({ error: `Producto con id ${item.id_producto} no encontrado o no disponible` });
+        return;
       }
 
-      if (prod.stock < item.cantidad) {
-        return res.status(400).json({ error: `Stock insuficiente para el producto ${prod.nombre_producto}` });
+      if (prod.stock === null || prod.stock < item.cantidad) {
+        res.status(400).json({ error: `Stock insuficiente para el producto ${prod.nombre_producto}` });
+        return;
+      }
+
+      if (prod.precio_producto === null) {
+        res.status(400).json({ error: `Precio no definido para el producto ${prod.nombre_producto}` });
+        return;
       }
 
       const subtotal = prod.precio_producto * item.cantidad;
       total += subtotal;
 
       detalles.push({
+        id_detalle: uuidv4(),
         id_producto: item.id_producto,
         cantidad: item.cantidad,
         precio_unit: prod.precio_producto,
@@ -83,12 +92,19 @@ router.post('/comprar', verificarToken(), async (req, res) => {
       });
     }
 
+    // Prisma requiere que detalles sea un array de objetos con los campos requeridos por tb_detalle_ordenes
     const nuevaOrden = await prisma.tb_ordenes.create({
       data: {
+        id_orden: uuidv4(),
         id_persona,
         total,
         detalles: {
-          create: detalles,
+          create: detalles.map(det => ({
+            id_detalle: det.id_detalle,
+            id_producto: det.id_producto,
+            cantidad: det.cantidad,
+            precio_unit: det.precio_unit,
+          })),
         },
       },
       include: {
@@ -100,8 +116,7 @@ router.post('/comprar', verificarToken(), async (req, res) => {
       },
     });
 
-    //solo devolvemos confirmación:
-    return res.status(201).json({ 
+    res.status(201).json({ 
       message: 'Compra registrada exitosamente',
       orden: nuevaOrden,
     });
@@ -112,4 +127,4 @@ router.post('/comprar', verificarToken(), async (req, res) => {
   }
 });
 
-export default router;
+export default router;  
